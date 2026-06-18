@@ -1,0 +1,1 @@
+export const font = { family: "'Inter', sans-serif", size: { xs:'11px', sm:'13px', base:'14px', md:'15px', lg:'18px', xl:'24px', xxl:'32px' }, weight: { normal:400, medium:500, semibold:600, bold:700, extrabold:800 } };

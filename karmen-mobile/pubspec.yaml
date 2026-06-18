@@ -1,0 +1,78 @@
+name: karmen
+description: Gestión de facturas y contabilidad empresarial
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+  flutter_riverpod: ^2.5.1
+
+  # Functional programming
+  dartz: ^0.10.1
+  equatable: ^2.0.5
+
+  # Networking
+  dio: ^5.4.3
+
+  # Storage & Security
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.2
+
+  # Biometrics
+  local_auth: ^2.1.8
+
+  # Navigation
+  go_router: ^14.2.0
+
+  # Camera & Image
+  camera: ^0.11.0+2
+  image_picker: ^1.1.2
+  # Escáner de documentos nativo (ML Kit en Android, VisionKit en iOS)
+  # Detecta bordes, recorta y corrige perspectiva como CamScanner
+  cunning_document_scanner: ^1.2.3
+
+  # Charts
+  fl_chart: ^0.68.0
+
+  # Firebase
+  firebase_core: ^3.3.0
+  firebase_messaging: ^15.1.0
+
+  # DI
+  get_it: ^7.7.0
+
+  # Connectivity
+  connectivity_plus: ^6.0.3
+
+  # Utilities
+  intl: ^0.19.0
+  flutter_dotenv: ^5.1.0
+  logger: ^2.4.0
+
+  # UI
+  shimmer: ^3.0.0
+  cached_network_image: ^3.3.1
+  google_fonts: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^4.0.0
+  bloc_test: ^9.1.7
+  mocktail: ^1.0.4
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - .env

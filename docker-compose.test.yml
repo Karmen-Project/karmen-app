@@ -1,0 +1,12 @@
+services:
+  tests:
+    build:
+      context: ./karmen-backend
+      dockerfile: Dockerfile
+      target: test
+    container_name: karmen-tests
+    volumes:
+      # Reporte HTML de cobertura JaCoCo → abrir test-reports/jacoco/index.html
+      - ./test-reports/jacoco:/app/target/site/jacoco
+      # Resultados XML de cada test (Surefire) → útil para CI
+      - ./test-reports/surefire:/app/target/surefire-reports

@@ -1,0 +1,121 @@
+spring:
+  application:
+    name: karmen-api
+  jackson:
+    time-zone: America/Bogota
+
+  # ── Base de datos ──────────────────────────────────────────────
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DB_USER}
+    password: ${DB_PASS}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 5        # Supabase free tier: máx 25 conexiones directas
+      minimum-idle: 2
+      idle-timeout: 300000
+      keepalive-time: 60000       # Evita que Supabase cierre conexiones inactivas
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: facturai
+
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+
+server:
+  port: ${PORT}
+
+# ── JWT ─────────────────────────────────────────────────────────
+jwt:
+  secret: ${JWT_SECRET}
+  expiration-ms: ${JWT_EXPIRATION}
+
+# ── CORS ────────────────────────────────────────────────────────
+app:
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS}
+
+# ── Storage ─────────────────────────────────────────────────────
+# Render tiene filesystem efímero: los archivos se pierden al reiniciar.
+# Los logos se suben a Supabase Storage (persistente).
+# Los archivos de facturas siguen en disco local (temporal / análisis OCR).
+storage:
+  upload-dir: ${UPLOAD_DIR}
+
+# ── Supabase Storage ─────────────────────────────────────────────
+# supabase.* se leen via System.getenv() en SupabaseStorageService (no via @Value)
+# Los defaults aquí solo evitan errores de resolución de placeholder al arrancar
+supabase:
+  url: ${SUPABASE_URL:}
+  service-key: ${SUPABASE_SERVICE_KEY:}
+  storage:
+    bucket: ${SUPABASE_STORAGE_BUCKET:imagenes}
+
+# ── Gemini / Google Gen AI (extracción inteligente de facturas) ──
+# La API key (gratis en Google AI Studio) se lee del entorno: GOOGLE_API_KEY.
+# Si enabled=false o la key no está, OcrService cae automáticamente al parser de regex.
+gemini:
+  enabled: ${GEMINI_ENABLED:true}
+  model: ${GEMINI_MODEL:gemini-2.5-flash}
+
+# ── Logging ─────────────────────────────────────────────────────
+logging:
+  level:
+    com.karmen: ${LOG_LEVEL:INFO}
+
+# ── Actuator / Prometheus ────────────────────────────────────────
+management:
+  endpoints:
+    web:
+      # 'prometheus' se protege con MetricsAuthFilter (token Bearer).
+      # 'metrics' solo disponible sin puerto público — Render no lo expone.
+      exposure:
+        include: health,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      # En producción (Render) no mostrar detalles internos al exterior.
+      # Render usa /actuator/health para healthcheck; solo necesita el status.
+      show-details: "${ACTUATOR_HEALTH_DETAILS:never}"
+      probes:
+        enabled: true
+    prometheus:
+      enabled: true
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
+      enabled: true
+  metrics:
+    tags:
+      application: karmen-api
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+# ── OpenAPI / Swagger ────────────────────────────────────────────
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    show-extensions: true
+    operations-sorter: method
+    tags-sorter: alpha

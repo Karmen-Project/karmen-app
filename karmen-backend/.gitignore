@@ -1,0 +1,9 @@
+target/
+*.class
+*.jar
+*.war
+.idea/
+*.iml
+.env
+uploads/
+application-local.yml

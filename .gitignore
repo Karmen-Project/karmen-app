@@ -1,0 +1,15 @@
+.env
+.DS_Store
+karmen-backend/target/
+karmen-frontend/node_modules/
+karmen-frontend/dist/
+uploads/
+docs/
+test-reports/
+*.log
+.claude/
+.github/
+.idea/
+scripts/
+.vscode/
+SONAR.MD

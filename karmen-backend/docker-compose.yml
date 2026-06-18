@@ -1,0 +1,94 @@
+services:
+  # ── PostgreSQL 16 ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    container_name: karmen-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER:
+      POSTGRES_PASSWORD:
+      POSTGRES_DB:
+    ports:
+      - "5433:5432"
+    volumes:
+      - karmen_pgdata:/var/lib/postgresql/data
+      - ./karmen-backend/src/main/resources/db/init1.sql:/docker-entrypoint-initdb.d/02-init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U karmen_user -d karmen"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ── Spring Boot API ──────────────────────────────────────────────────────────
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: karmen-api
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    # env_file pasa TODAS las variables del .env directamente al contenedor.
+    # No duplicar en environment: con ${VAR} — eso sobreescribiría con vacío
+    # si la variable no existe en el shell donde se corre docker compose.
+    env_file: .env
+
+    ports:
+      - "8080:8080"
+    volumes:
+      - karmen_uploads:/app/uploads
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/actuator/health 2>/dev/null || exit 0"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ── Prometheus (solo red interna — sin puerto público) ───────────────────────
+  prometheus:
+    image: prom/prometheus:v2.51.2
+    container_name: karmen-prometheus
+    restart: unless-stopped
+    # Sin ports: Prometheus NO es accesible desde internet, solo internamente
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # ── Grafana ──────────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: karmen-grafana
+    restart: unless-stopped
+    ports:
+      - "3001:3000"
+    env_file: .env
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s/grafana/"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+    depends_on:
+      - prometheus
+
+volumes:
+  karmen_pgdata:
+    driver: local
+  karmen_uploads:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
